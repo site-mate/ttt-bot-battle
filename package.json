@@ -1,0 +1,14 @@
+{
+  "name": "ttt-bot-battle",
+  "version": "1.0.0",
+  "description": "Tic-Tac-Toe Bot Battle Tournament Engine",
+  "main": "tournament.js",
+  "scripts": {
+    "tournament": "node tournament.js",
+    "tournament:quick": "node tournament.js --quick",
+    "test-bot": "node test.js"
+  },
+  "dependencies": {
+    "chalk": "^4.1.2"
+  }
+}
