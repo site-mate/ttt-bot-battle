@@ -5,7 +5,7 @@
 
 const chalk = require('chalk');
 
-const DELAY_MS = 500;
+const DELAY_MS = 1000;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -21,11 +21,10 @@ function colorCell(cell) {
 }
 
 /**
- * Render the board as a string.
+ * Render the board as an array of lines (no leading/trailing blank lines).
  */
-function renderBoard(board) {
+function renderBoardLines(board) {
   const lines = [];
-  lines.push('');
   for (let r = 0; r < 3; r++) {
     const row = board[r].map(cell => ` ${colorCell(cell)} `).join(chalk.gray('|'));
     lines.push(`    ${row}`);
@@ -33,8 +32,23 @@ function renderBoard(board) {
       lines.push(chalk.gray('    -----------'));
     }
   }
-  lines.push('');
-  return lines.join('\n');
+  return lines;
+}
+
+/**
+ * Render the board as a string.
+ */
+function renderBoard(board) {
+  return '\n' + renderBoardLines(board).join('\n') + '\n';
+}
+
+/**
+ * Move cursor up N lines and clear each line.
+ */
+function cursorUp(n) {
+  for (let i = 0; i < n; i++) {
+    process.stdout.write('\x1b[1A\x1b[2K');
+  }
 }
 
 /**
@@ -62,6 +76,7 @@ function printMatchBanner(nameA, nameB) {
 
 /**
  * Animate a single game move-by-move.
+ * Uses in-place terminal updates so each game shows one board that mutates.
  */
 async function animateGame(result, delayMs = DELAY_MS) {
   printMatchBanner(result.botA.name, result.botB.name);
@@ -73,12 +88,34 @@ async function animateGame(result, delayMs = DELAY_MS) {
   ];
 
   console.log(chalk.gray(`  ${result.botA.name} plays as ${chalk.cyan('X')}  |  ${result.botB.name} plays as ${chalk.magenta('O')}`));
+  console.log('');
+
+  // The status line + board lines that we'll overwrite each turn
+  // Status line (1) + board lines (5: 3 rows + 2 separators) + blank line (1) = 7 lines
+  const BOARD_LINE_COUNT = 7;
+
+  // Draw initial empty board + status
+  console.log(chalk.gray('  Waiting...'));
+  const initialLines = renderBoardLines(board);
+  for (const line of initialLines) console.log(line);
+  console.log('');
+
+  await sleep(delayMs);
 
   for (const move of result.moves) {
     board[move.row][move.col] = move.player;
     const pieceColor = move.player === 'X' ? chalk.cyan : chalk.magenta;
-    console.log(chalk.gray(`  ${move.botName} plays ${pieceColor(move.player)} at (${move.row}, ${move.col})`));
-    printBoard(board);
+    const statusLine = chalk.gray(`  ${move.botName} plays ${pieceColor(move.player)} at (${move.row}, ${move.col})`);
+
+    // Move cursor back up over the previous status + board + blank line
+    cursorUp(BOARD_LINE_COUNT);
+
+    // Redraw status + board in place
+    console.log(statusLine);
+    const boardLines = renderBoardLines(board);
+    for (const line of boardLines) console.log(line);
+    console.log('');
+
     await sleep(delayMs);
   }
 
