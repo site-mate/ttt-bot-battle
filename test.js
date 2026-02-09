@@ -5,12 +5,17 @@
  *
  * Usage:
  *   node test.js ./candidates/my-bot.js
- *   node test.js ./candidates/my-bot.js ./bots/blocker-bot.js
+ *   node test.js ./candidates/my-bot.js --watch
+ *   node test.js ./candidates/my-bot.js ./bots/starter-bot.js
+ *   node test.js ./candidates/my-bot.js ./bots/starter-bot.js --watch
  */
 
 const path = require('path');
 const chalk = require('chalk');
-const { playGame, getBotName } = require('./engine/game');
+const { playGame } = require('./engine/game');
+const { animateGame, printMatchBanner, printGameResult } = require('./engine/display');
+
+const REF_DIR = path.join(__dirname, 'engine', '.ref');
 
 function loadBot(filePath) {
   const resolved = path.resolve(filePath);
@@ -36,11 +41,12 @@ function loadBot(filePath) {
 }
 
 function runMatchup(botA, botB, gamesPerSide) {
-  const results = { wins: 0, losses: 0, draws: 0, forfeits: 0, errors: [] };
+  const results = { wins: 0, losses: 0, draws: 0, forfeits: 0, errors: [], games: [] };
 
   // Bot plays as X
   for (let i = 0; i < gamesPerSide; i++) {
     const result = playGame(botA, botB);
+    results.games.push(result);
     if (result.winner === 'botA') {
       results.wins++;
     } else if (result.winner === 'botB') {
@@ -58,6 +64,7 @@ function runMatchup(botA, botB, gamesPerSide) {
   // Bot plays as O
   for (let i = 0; i < gamesPerSide; i++) {
     const result = playGame(botB, botA);
+    results.games.push(result);
     if (result.winner === 'botB') {
       results.wins++;
     } else if (result.winner === 'botA') {
@@ -85,7 +92,6 @@ function printMatchupResult(yourName, opponentName, results, totalGames) {
 
   if (results.forfeits > 0) {
     console.log(chalk.red(`    Forfeits: ${results.forfeits}`));
-    // Show unique errors
     const uniqueErrors = [...new Set(results.errors)];
     for (const err of uniqueErrors) {
       console.log(chalk.red(`      - ${err}`));
@@ -93,41 +99,69 @@ function printMatchupResult(yourName, opponentName, results, totalGames) {
   }
 }
 
+async function runVisualMatchup(botA, botB) {
+  // Play 2 games: one as X, one as O
+  const asX = playGame(botA, botB);
+  await animateGame(asX, 800);
+
+  const asO = playGame(botB, botA);
+  await animateGame(asO, 800);
+}
+
 // --- Main ---
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+const watchMode = rawArgs.includes('--watch');
+const args = rawArgs.filter(a => a !== '--watch');
 
 if (args.length === 0) {
   console.log(chalk.cyan('\n  TTT Bot Battle - Test Runner'));
   console.log(chalk.gray('\n  Usage:'));
   console.log(chalk.gray('    node test.js ./candidates/my-bot.js'));
-  console.log(chalk.gray('    node test.js ./candidates/my-bot.js ./bots/blocker-bot.js'));
+  console.log(chalk.gray('    node test.js ./candidates/my-bot.js --watch'));
+  console.log(chalk.gray('    node test.js ./candidates/my-bot.js ./bots/starter-bot.js'));
   console.log('');
   process.exit(0);
 }
 
-const myBot = loadBot(args[0]);
-console.log(chalk.cyan(`\n  Testing: ${chalk.bold(myBot.name)}`));
-console.log(chalk.gray('  ─'.repeat(20)));
+async function main() {
+  const myBot = loadBot(args[0]);
+  console.log(chalk.cyan(`\n  Testing: ${chalk.bold(myBot.name)}`));
+  console.log(chalk.gray('  ─'.repeat(20)));
 
-const GAMES_PER_SIDE = 5;
+  const GAMES_PER_SIDE = 5;
 
-if (args.length >= 2) {
-  // Test against a specific bot
-  const opponent = loadBot(args[1]);
-  const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
-  printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
-} else {
-  // Test against starter-bot and random-bot
-  const starterBot = loadBot(path.join(__dirname, 'bots', 'starter-bot.js'));
-  const randomBot = loadBot(path.join(__dirname, 'bots', 'random-bot.js'));
+  if (args.length >= 2) {
+    // Test against a specific bot
+    const opponent = loadBot(args[1]);
+    if (watchMode) {
+      await runVisualMatchup(myBot, opponent);
+    }
+    const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+    printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
+  } else {
+    // Test against all reference bots
+    const starterBot = loadBot(path.join(__dirname, 'bots', 'starter-bot.js'));
+    const randomBot = loadBot(path.join(REF_DIR, 'random-bot.js'));
+    const blockerBot = loadBot(path.join(REF_DIR, 'blocker-bot.js'));
+    const smartBot = loadBot(path.join(REF_DIR, 'smart-bot.js'));
 
-  const starterResults = runMatchup(myBot, starterBot, GAMES_PER_SIDE);
-  printMatchupResult(myBot.name, starterBot.name, starterResults, GAMES_PER_SIDE * 2);
+    const opponents = [starterBot, randomBot, blockerBot, smartBot];
 
-  const randomResults = runMatchup(myBot, randomBot, GAMES_PER_SIDE);
-  printMatchupResult(myBot.name, randomBot.name, randomResults, GAMES_PER_SIDE * 2);
+    for (const opponent of opponents) {
+      if (watchMode) {
+        await runVisualMatchup(myBot, opponent);
+      }
+      const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+      printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
+    }
+  }
+
+  console.log(chalk.gray('\n  ─'.repeat(20)));
+  console.log(chalk.green('  Done!\n'));
 }
 
-console.log(chalk.gray('\n  ─'.repeat(20)));
-console.log(chalk.green('  Done!\n'));
+main().catch(err => {
+  console.error(chalk.red(`\n  Error: ${err.message}\n`));
+  process.exit(1);
+});

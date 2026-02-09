@@ -1,4 +1,2 @@
 node_modules/
-bots/smart-bot.js
-bots/blocker-bot.js
-bots/random-bot.js
+candidates/*.js

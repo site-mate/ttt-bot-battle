@@ -1,6 +1,8 @@
 // starter-bot.js — Your starting point! Copy this file into the candidates/ folder and rename it.
 // Then make it smarter!
 
+const { opponent } = require('../utils');
+
 // myPiece is the string that represents your X or O!
 module.exports = function StarterBot(board, myPiece) {
   // String that denotes the enemy piece (X or O)
