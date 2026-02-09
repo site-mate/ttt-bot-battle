@@ -40,43 +40,35 @@ function loadBot(filePath) {
   }
 }
 
+function tallyResult(results, result, myBotLabel) {
+  const otherLabel = myBotLabel === 'botA' ? 'botB' : 'botA';
+  if (result.winner === myBotLabel) {
+    results.wins++;
+  } else if (result.winner === otherLabel) {
+    if (result.reason === 'invalid_move' || result.reason === 'timeout' || result.reason === 'error') {
+      results.forfeits++;
+      results.errors.push(result.forfeitDetail);
+    } else {
+      results.losses++;
+    }
+  } else {
+    results.draws++;
+  }
+}
+
 function runMatchup(botA, botB, gamesPerSide) {
   const results = { wins: 0, losses: 0, draws: 0, forfeits: 0, errors: [], games: [] };
 
-  // Bot plays as X
   for (let i = 0; i < gamesPerSide; i++) {
     const result = playGame(botA, botB);
     results.games.push(result);
-    if (result.winner === 'botA') {
-      results.wins++;
-    } else if (result.winner === 'botB') {
-      if (result.reason === 'invalid_move' || result.reason === 'timeout' || result.reason === 'error') {
-        results.forfeits++;
-        results.errors.push(result.forfeitDetail);
-      } else {
-        results.losses++;
-      }
-    } else {
-      results.draws++;
-    }
+    tallyResult(results, result, 'botA');
   }
 
-  // Bot plays as O
   for (let i = 0; i < gamesPerSide; i++) {
     const result = playGame(botB, botA);
     results.games.push(result);
-    if (result.winner === 'botB') {
-      results.wins++;
-    } else if (result.winner === 'botA') {
-      if (result.reason === 'invalid_move' || result.reason === 'timeout' || result.reason === 'error') {
-        results.forfeits++;
-        results.errors.push(result.forfeitDetail);
-      } else {
-        results.losses++;
-      }
-    } else {
-      results.draws++;
-    }
+    tallyResult(results, result, 'botB');
   }
 
   return results;
@@ -99,13 +91,10 @@ function printMatchupResult(yourName, opponentName, results, totalGames) {
   }
 }
 
-async function runVisualMatchup(botA, botB) {
-  // Play 2 games: one as X, one as O
-  const asX = playGame(botA, botB);
-  await animateGame(asX, 800);
-
-  const asO = playGame(botB, botA);
-  await animateGame(asO, 800);
+async function animateMatchupGames(games) {
+  for (const game of games) {
+    await animateGame(game, 800);
+  }
 }
 
 // --- Main ---
@@ -134,10 +123,8 @@ async function main() {
   if (args.length >= 2) {
     // Test against a specific bot
     const opponent = loadBot(args[1]);
-    if (watchMode) {
-      await runVisualMatchup(myBot, opponent);
-    }
     const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+    if (watchMode) await animateMatchupGames(results.games);
     printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
   } else {
     // Test against all reference bots
@@ -149,10 +136,8 @@ async function main() {
     const opponents = [starterBot, randomBot, blockerBot, smartBot];
 
     for (const opponent of opponents) {
-      if (watchMode) {
-        await runVisualMatchup(myBot, opponent);
-      }
       const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+      if (watchMode) await animateMatchupGames(results.games);
       printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
     }
   }
