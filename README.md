@@ -76,14 +76,20 @@ const { checkWinner, cloneBoard, wouldWin, opponent, getEmptyCells, printBoard }
 ## Testing Your Bot
 
 ```bash
-# Test against the starter bot and random bot
+# Test against all reference bots (shows win/loss/draw stats)
 node test.js ./candidates/my-bot.js
 
+# Watch the games play out visually, move by move
+node test.js ./candidates/my-bot.js --watch
+
 # Test against a specific bot
-node test.js ./candidates/my-bot.js ./bots/blocker-bot.js
+node test.js ./candidates/my-bot.js ./bots/starter-bot.js
+
+# Watch a specific matchup
+node test.js ./candidates/my-bot.js ./bots/starter-bot.js --watch
 ```
 
-Your bot plays 10 games per opponent (5 as X, 5 as O) and you'll see your win/loss/draw record.
+Your bot plays 10 games per opponent (5 as X, 5 as O) and you'll see your win/loss/draw record. Add `--watch` to see an animated board for each game so you can watch your bot's strategy in action.
 
 ## Strategy Hints
 
