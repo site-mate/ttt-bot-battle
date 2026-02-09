@@ -101,14 +101,20 @@ async function animateMatchupGames(games) {
 
 const rawArgs = process.argv.slice(2);
 const watchMode = rawArgs.includes('--watch');
-const args = rawArgs.filter(a => a !== '--watch');
+const roundsArg = rawArgs.find(a => a.startsWith('--rounds='));
+const gamesPerSide = roundsArg ? parseInt(roundsArg.split('=')[1], 10) : 1;
+const args = rawArgs.filter(a => a !== '--watch' && !a.startsWith('--rounds='));
 
-if (args.length === 0) {
+if (args.length === 0 || rawArgs.includes('--help')) {
   console.log(chalk.cyan('\n  TTT Bot Battle - Test Runner'));
   console.log(chalk.gray('\n  Usage:'));
   console.log(chalk.gray('    node test.js ./candidates/my-bot.js'));
   console.log(chalk.gray('    node test.js ./candidates/my-bot.js --watch'));
+  console.log(chalk.gray('    node test.js ./candidates/my-bot.js --rounds=5'));
   console.log(chalk.gray('    node test.js ./candidates/my-bot.js ./bots/starter-bot.js'));
+  console.log(chalk.gray('\n  Options:'));
+  console.log(chalk.gray('    --watch       Watch games play out visually'));
+  console.log(chalk.gray('    --rounds=N    Play N games per side (default: 1, so 2 games total per opponent)'));
   console.log('');
   process.exit(0);
 }
@@ -118,14 +124,12 @@ async function main() {
   console.log(chalk.cyan(`\n  Testing: ${chalk.bold(myBot.name)}`));
   console.log(chalk.gray('  ─'.repeat(20)));
 
-  const GAMES_PER_SIDE = 5;
-
   if (args.length >= 2) {
     // Test against a specific bot
     const opponent = loadBot(args[1]);
-    const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+    const results = runMatchup(myBot, opponent, gamesPerSide);
     if (watchMode) await animateMatchupGames(results.games);
-    printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
+    printMatchupResult(myBot.name, opponent.name, results, gamesPerSide * 2);
   } else {
     // Test against all reference bots
     const starterBot = loadBot(path.join(__dirname, 'bots', 'starter-bot.js'));
@@ -136,9 +140,9 @@ async function main() {
     const opponents = [starterBot, randomBot, blockerBot, smartBot];
 
     for (const opponent of opponents) {
-      const results = runMatchup(myBot, opponent, GAMES_PER_SIDE);
+      const results = runMatchup(myBot, opponent, gamesPerSide);
       if (watchMode) await animateMatchupGames(results.games);
-      printMatchupResult(myBot.name, opponent.name, results, GAMES_PER_SIDE * 2);
+      printMatchupResult(myBot.name, opponent.name, results, gamesPerSide * 2);
     }
   }
 
