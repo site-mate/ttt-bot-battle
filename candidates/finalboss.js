@@ -6,39 +6,39 @@ const MOVE_ORDER = [
   [0, 1], [1, 0], [1, 2], [2, 1],
 ];
 
-function minimax(isMaximizing, alpha, beta, depth) {
-  const winner = checkWinner(board);
-  if (winner === myPiece) return 10 + depth;
-  if (winner === enemyPiece) return -10 - depth;
-
-  const empty = getEmptyCells(board);
-  if (empty.length === 0) return 0;
-
-  if (isMaximizing) {
-    let best = -Infinity;
-    for (const { row, col } of empty) {
-      board[row][col] = myPiece;
-      best = Math.max(best, minimax(false, alpha, beta, depth - 1));
-      board[row][col] = null;
-      if (best >= beta) return best;
-      if (best > alpha) alpha = best;
-    }
-    return best;
-  } else {
-    let best = Infinity;
-    for (const { row, col } of empty) {
-      board[row][col] = enemyPiece;
-      best = Math.min(best, minimax(true, alpha, beta, depth - 1));
-      board[row][col] = null;
-      if (best <= alpha) return best;
-      if (best < beta) beta = best;
-    }
-    return best;
-  }
-}
-
 module.exports = function FinalBossBot(board, myPiece) {
   const enemyPiece = opponent(myPiece);
+
+  function minimax(isMaximizing, alpha, beta, depth) {
+    const winner = checkWinner(board);
+    if (winner === myPiece) return 10 + depth;
+    if (winner === enemyPiece) return -10 - depth;
+
+    const empty = getEmptyCells(board);
+    if (empty.length === 0) return 0;
+
+    if (isMaximizing) {
+      let best = -Infinity;
+      for (const { row, col } of empty) {
+        board[row][col] = myPiece;
+        best = Math.max(best, minimax(false, alpha, beta, depth - 1));
+        board[row][col] = null;
+        if (best >= beta) return best;
+        if (best > alpha) alpha = best;
+      }
+      return best;
+    } else {
+      let best = Infinity;
+      for (const { row, col } of empty) {
+        board[row][col] = enemyPiece;
+        best = Math.min(best, minimax(true, alpha, beta, depth - 1));
+        board[row][col] = null;
+        if (best <= alpha) return best;
+        if (best < beta) beta = best;
+      }
+      return best;
+    }
+  }
 
   const emptyCells = [];
   for (const [r, c] of MOVE_ORDER) {
