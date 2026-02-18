@@ -12,21 +12,27 @@ Welcome to the Tic-Tac-Toe Bot Battle Tournament! You're going to build a bot th
 git checkout -b bot/your-name
 ```
 
-2. Copy the starter bot into the `candidates/` folder and give it your own name:
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Copy the starter bot into the `candidates/` folder and give it your own name:
 
 ```bash
 cp bots/starter-bot.js candidates/my-awesome-bot.js
 ```
 
-3. Open your file and start making it smarter!
+4. Open your file and start making it smarter!
 
-4. Test your bot:
+5. Test your bot:
 
 ```bash
 node test.js ./candidates/my-awesome-bot.js
 ```
 
-5. When you're happy with your bot, commit and push your branch, then **open a PR** to add your bot to the `candidates/` folder:
+6. When you're happy with your bot, commit and push your branch, then **open a PR** to add your bot to the `candidates/` folder:
 
 ```bash
 git add candidates/my-awesome-bot.js
