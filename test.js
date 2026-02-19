@@ -122,7 +122,7 @@ if (args.length === 0 || rawArgs.includes('--help')) {
 async function main() {
   const myBot = loadBot(args[0]);
   console.log(chalk.cyan(`\n  Testing: ${chalk.bold(myBot.name)}`));
-  console.log(chalk.gray('  ─'.repeat(20)));
+  console.log(chalk.gray('  ' + '─'.repeat(20)));
 
   if (args.length >= 2) {
     // Test against a specific bot
@@ -146,7 +146,7 @@ async function main() {
     }
   }
 
-  console.log(chalk.gray('\n  ─'.repeat(20)));
+  console.log('\n' + chalk.gray('  ' + '─'.repeat(20)));
   console.log(chalk.green('  Done!\n'));
 }
 
