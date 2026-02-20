@@ -3,10 +3,13 @@
  * Runs a single game between two bots.
  */
 
+const { Worker } = require('worker_threads');
+const path = require('path');
 const { validateMove } = require('./validator');
 const { checkWinner, cloneBoard } = require('../utils');
 
 const MOVE_TIMEOUT_MS = 1000;
+const WORKER_PATH = path.join(__dirname, 'bot-worker.js');
 
 /**
  * Extract bot name from function name or file path.
@@ -22,30 +25,51 @@ function getBotName(bot) {
 }
 
 /**
- * Execute a bot's move with a timeout.
+ * Execute a bot's move in a worker thread with a real timeout.
+ * If the bot doesn't respond within MOVE_TIMEOUT_MS, the worker is terminated.
  * Returns { move, error, timedOut }
  */
-function executeBotMove(botFn, boardClone, piece) {
-  const start = Date.now();
-  try {
-    const move = botFn(boardClone, piece);
-    const elapsed = Date.now() - start;
-    if (elapsed > MOVE_TIMEOUT_MS) {
-      return { move: null, error: null, timedOut: true };
-    }
-    return { move, error: null, timedOut: false };
-  } catch (err) {
-    return { move: null, error: err, timedOut: false };
-  }
+function executeBotMove(botFile, boardClone, piece) {
+  return new Promise((resolve) => {
+    const worker = new Worker(WORKER_PATH, {
+      workerData: { botFile, board: boardClone, piece }
+    });
+
+    const timer = setTimeout(() => {
+      worker.terminate();
+      resolve({ move: null, error: null, timedOut: true });
+    }, MOVE_TIMEOUT_MS);
+
+    worker.on('message', (msg) => {
+      clearTimeout(timer);
+      if (msg.error) {
+        resolve({ move: null, error: new Error(msg.error), timedOut: false });
+      } else {
+        resolve({ move: msg.move, error: null, timedOut: false });
+      }
+    });
+
+    worker.on('error', (err) => {
+      clearTimeout(timer);
+      resolve({ move: null, error: err, timedOut: false });
+    });
+
+    worker.on('exit', (code) => {
+      clearTimeout(timer);
+      if (code !== 0 && code !== 1) {
+        resolve({ move: null, error: new Error(`Worker exited with code ${code}`), timedOut: false });
+      }
+    });
+  });
 }
 
 /**
  * Play a single game between two bots.
  * @param {{ name?: string, fn: Function, file?: string }} botA - plays as X (goes first)
  * @param {{ name?: string, fn: Function, file?: string }} botB - plays as O
- * @returns {object} Game result
+ * @returns {Promise<object>} Game result
  */
-function playGame(botA, botB) {
+async function playGame(botA, botB) {
   const board = [
     [null, null, null],
     [null, null, null],
@@ -74,7 +98,7 @@ function playGame(botA, botB) {
     const current = players[turn % 2];
     const boardClone = cloneBoard(board);
 
-    const { move, error, timedOut } = executeBotMove(current.bot.fn, boardClone, current.piece);
+    const { move, error, timedOut } = await executeBotMove(current.bot.file, boardClone, current.piece);
 
     // Timeout
     if (timedOut) {

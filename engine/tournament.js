@@ -10,7 +10,7 @@ const { playGame } = require('./game');
  * @param {{ name: string, fn: Function, file: string }[]} bots
  * @returns {{ leaderboard: object[], matches: object[], stats: object }}
  */
-function runTournament(bots) {
+async function runTournament(bots) {
   const stats = {};
 
   // Initialize stats for each bot
@@ -39,7 +39,7 @@ function runTournament(bots) {
       const botA = bots[i]; // plays as X
       const botB = bots[j]; // plays as O
 
-      const result = playGame(botA, botB);
+      const result = await playGame(botA, botB);
       matches.push(result);
 
       stats[botA.name].gamesPlayed++;

@@ -78,7 +78,7 @@ async function main() {
 
   console.log(chalk.cyan(`\n  ${bots.length} bots loaded. Let the battle begin!\n`));
 
-  const { leaderboard, matches, stats } = runTournament(bots);
+  const { leaderboard, matches, stats } = await runTournament(bots);
 
   if (quickMode) {
     console.log(chalk.gray('  Quick mode: showing results only\n'));

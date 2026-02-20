@@ -56,17 +56,17 @@ function tallyResult(results, result, myBotLabel) {
   }
 }
 
-function runMatchup(botA, botB, gamesPerSide) {
+async function runMatchup(botA, botB, gamesPerSide) {
   const results = { wins: 0, losses: 0, draws: 0, forfeits: 0, errors: [], games: [] };
 
   for (let i = 0; i < gamesPerSide; i++) {
-    const result = playGame(botA, botB);
+    const result = await playGame(botA, botB);
     results.games.push(result);
     tallyResult(results, result, 'botA');
   }
 
   for (let i = 0; i < gamesPerSide; i++) {
-    const result = playGame(botB, botA);
+    const result = await playGame(botB, botA);
     results.games.push(result);
     tallyResult(results, result, 'botB');
   }
