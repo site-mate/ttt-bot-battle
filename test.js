@@ -127,7 +127,7 @@ async function main() {
   if (args.length >= 2) {
     // Test against a specific bot
     const opponent = loadBot(args[1]);
-    const results = runMatchup(myBot, opponent, gamesPerSide);
+    const results = await runMatchup(myBot, opponent, gamesPerSide);
     if (watchMode) await animateMatchupGames(results.games);
     printMatchupResult(myBot.name, opponent.name, results, gamesPerSide * 2);
   } else {
@@ -140,7 +140,7 @@ async function main() {
     const opponents = [starterBot, randomBot, blockerBot, smartBot];
 
     for (const opponent of opponents) {
-      const results = runMatchup(myBot, opponent, gamesPerSide);
+      const results = await runMatchup(myBot, opponent, gamesPerSide);
       if (watchMode) await animateMatchupGames(results.games);
       printMatchupResult(myBot.name, opponent.name, results, gamesPerSide * 2);
     }
