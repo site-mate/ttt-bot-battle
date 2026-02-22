@@ -157,4 +157,19 @@ async function playGame(botA, botB) {
   return result;
 }
 
-module.exports = { playGame, getBotName };
+/**
+ * Warm up the worker thread pool by spawning and immediately terminating a worker.
+ * Call this once before the tournament to avoid cold-start delay on the first game.
+ */
+function warmupWorker() {
+  return new Promise((resolve) => {
+    const worker = new Worker(WORKER_PATH, {
+      workerData: { botFile: '', board: [], piece: 'X' }
+    });
+    worker.on('error', () => {});
+    worker.on('exit', () => resolve());
+    worker.terminate();
+  });
+}
+
+module.exports = { playGame, getBotName, warmupWorker };

@@ -13,6 +13,7 @@ const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
 const { runTournament } = require('./engine/tournament');
+const { warmupWorker } = require('./engine/game');
 const {
   animateGame,
   printQuickResult,
@@ -78,6 +79,7 @@ async function main() {
 
   console.log(chalk.cyan(`\n  ${bots.length} bots loaded. Let the battle begin!\n`));
 
+  await warmupWorker();
   const { leaderboard, matches, stats } = await runTournament(bots);
 
   if (quickMode) {

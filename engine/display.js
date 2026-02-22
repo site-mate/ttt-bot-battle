@@ -5,7 +5,7 @@
 
 const chalk = require('chalk');
 
-const DELAY_MS = 1000;
+const DELAY_MS = 750;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -236,12 +236,12 @@ function printQuickResult(result) {
  */
 function printWelcome() {
   console.log('');
-  console.log(chalk.cyan.bold('  ╔══════════════════════════════════════════════╗'));
-  console.log(chalk.cyan.bold('  ║                                              ║'));
-  console.log(chalk.cyan.bold('  ║      TTT BOT BATTLE TOURNAMENT              ║'));
-  console.log(chalk.cyan.bold('  ║      Tic-Tac-Toe AI Showdown!               ║'));
-  console.log(chalk.cyan.bold('  ║                                              ║'));
-  console.log(chalk.cyan.bold('  ╚══════════════════════════════════════════════╝'));
+  console.log(chalk.cyan.bold('  ╔════════════════════════════════════════╗'));
+  console.log(chalk.cyan.bold('  ║                                        ║'));
+  console.log(chalk.cyan.bold('  ║      TTT BOT BATTLE TOURNAMENT         ║'));
+  console.log(chalk.cyan.bold('  ║      Tic-Tac-Toe AI Showdown!          ║'));
+  console.log(chalk.cyan.bold('  ║                                        ║'));
+  console.log(chalk.cyan.bold('  ╚════════════════════════════════════════╝'));
   console.log('');
 }
 
