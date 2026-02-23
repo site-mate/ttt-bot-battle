@@ -10,6 +10,8 @@ Welcome to the Tic-Tac-Toe Bot Battle Tournament! You're going to build a bot th
 
 http://bit.ly/3ZSwII5 (or https://github.com/site-mate/ttt-bot-battle)
 
+Upload bot to https://drive.google.com/drive/folders/1hh3A-wmfCUXVDxmURWmYXV1VWuGteg9V?usp=drive_link when finished!
+
 ```bash
 git checkout -b bot/your-name
 ```
