@@ -18,6 +18,7 @@ const {
   animateGame,
   printQuickResult,
   printLeaderboard,
+  printLiveLeaderboard,
   printTournamentSummary,
   printWelcome
 } = require('./engine/display');
@@ -80,18 +81,26 @@ async function main() {
   console.log(chalk.cyan(`\n  ${bots.length} bots loaded. Let the battle begin!\n`));
 
   await warmupWorker();
-  const { leaderboard, matches, stats } = await runTournament(bots);
+
+  let gameCount = 0;
+  const onGameComplete = async (result, currentLeaderboard) => {
+    if (gameCount++ > 0) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+    console.clear();
+    printLiveLeaderboard(currentLeaderboard);
+    if (quickMode) {
+      printQuickResult(result);
+    } else {
+      await animateGame(result);
+    }
+  };
 
   if (quickMode) {
     console.log(chalk.gray('  Quick mode: showing results only\n'));
-    for (const result of matches) {
-      printQuickResult(result);
-    }
-  } else {
-    for (const result of matches) {
-      await animateGame(result);
-    }
   }
+
+  const { leaderboard, matches, stats } = await runTournament(bots, { onGameComplete });
 
   printLeaderboard(leaderboard);
   printTournamentSummary(stats);

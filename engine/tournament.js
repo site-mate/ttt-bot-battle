@@ -10,7 +10,7 @@ const { playGame } = require('./game');
  * @param {{ name: string, fn: Function, file: string }[]} bots
  * @returns {{ leaderboard: object[], matches: object[], stats: object }}
  */
-async function runTournament(bots) {
+async function runTournament(bots, { onGameComplete } = {}) {
   const stats = {};
 
   // Initialize stats for each bot
@@ -67,6 +67,16 @@ async function runTournament(bots) {
         stats[botB.name].draws++;
         stats[botA.name].points += 1;
         stats[botB.name].points += 1;
+      }
+
+      // Notify caller with current standings
+      if (onGameComplete) {
+        const currentLeaderboard = Object.values(stats).sort((a, b) => {
+          if (b.points !== a.points) return b.points - a.points;
+          if (b.wins !== a.wins) return b.wins - a.wins;
+          return a.name.localeCompare(b.name);
+        });
+        await onGameComplete(result, currentLeaderboard);
       }
 
       // Track fastest win

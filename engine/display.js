@@ -245,6 +245,55 @@ function printWelcome() {
   console.log('');
 }
 
+/**
+ * Display a compact live leaderboard after each game.
+ */
+function printLiveLeaderboard(leaderboard) {
+  // Inner width between │ and │
+  const IW = 39;
+  const border = '─'.repeat(IW);
+  const divider = ' ' + '─'.repeat(IW - 2) + ' ';
+
+  // Helper: log a row with content padded to exact inner width
+  // plainLen is the visible character count of the content (without ANSI codes)
+  function row(content, plainLen) {
+    const pad = ' '.repeat(IW - plainLen);
+    console.log(chalk.gray('  │') + content + pad + chalk.gray('│'));
+  }
+
+  console.log(chalk.gray(`  ┌${border}┐`));
+
+  const header = '  #  Bot              W   L   D   Pts';
+  row(chalk.bold(header), header.length);
+  console.log(chalk.gray(`  │${divider}│`));
+
+  for (let i = 0; i < leaderboard.length; i++) {
+    const bot = leaderboard[i];
+    const rank = String(i + 1).padEnd(3);
+    const name = bot.name.length > 16 ? bot.name.slice(0, 15) + '…' : bot.name.padEnd(16);
+    const w = String(bot.wins).padStart(3);
+    const l = String(bot.losses + bot.forfeits).padStart(4);
+    const d = String(bot.draws).padStart(4);
+    const pts = String(bot.points).padStart(5);
+
+    const nameColor = i === 0 ? chalk.yellow : i < 3 ? chalk.white : chalk.gray;
+
+    // plainLen: "  " + rank(3) + name(16) + w(3) + l(4) + d(4) + pts(5) = 37
+    const content =
+      '  ' +
+      chalk.gray(rank) +
+      nameColor(name) +
+      chalk.green(w) +
+      chalk.red(l) +
+      chalk.yellow(d) +
+      chalk.bold(pts);
+    row(content, 37);
+  }
+
+  console.log(chalk.gray(`  └${border}┘`));
+  console.log('');
+}
+
 module.exports = {
   printBoard,
   renderBoard,
@@ -254,5 +303,6 @@ module.exports = {
   printTournamentSummary,
   printQuickResult,
   printMatchBanner,
-  printWelcome
+  printWelcome,
+  printLiveLeaderboard
 };
