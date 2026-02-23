@@ -10,7 +10,6 @@ module.exports = function BigToe(board, myPiece) {
   
   // String that denotes the enemy piece (X or O)
   const enemyPiece = opponent(myPiece);
-  console.log(enemyPiece)
 
   // if the centre piece is free, place piece there
   if(board[1][1] === null) {
@@ -20,6 +19,21 @@ module.exports = function BigToe(board, myPiece) {
   // take the first corner if free
   if(board[0][0] === null) {
     return { row: 0, col: 0}
+  }
+
+  // take the bottom right corner if free
+  if(board[2][2] === null) {
+    return { row: 2, col: 2}
+  }
+
+  // take the top right corner if free
+  if(board[0][2] === null) {
+    return { row: 0, col: 2}
+  }
+
+  // take the bottom left corner if free
+  if(board[2][0] === null) {
+    return { row: 2, col: 0}
   }
 
   // then start going through the squares to find the next piece
