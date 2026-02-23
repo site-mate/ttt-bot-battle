@@ -8,7 +8,7 @@ Welcome to the Tic-Tac-Toe Bot Battle Tournament! You're going to build a bot th
 
 1. Clone the repo and create a branch:
 
-http://bit.ly/3ZSwII5
+http://bit.ly/3ZSwII5 (or https://github.com/site-mate/ttt-bot-battle)
 
 ```bash
 git checkout -b bot/your-name
