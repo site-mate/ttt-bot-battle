@@ -82,6 +82,25 @@ async function main() {
 
   await warmupWorker();
 
+  console.clear();
+  console.log('');
+  console.log('');
+  console.log('');
+  const totalGames = bots.length * (bots.length - 1);
+  const detail = `${bots.length} bots  |  ${totalGames} games  |  Round Robin`;
+  const detailPad = ' '.repeat(40 - 2 - detail.length);
+  console.log(chalk.yellow.bold('  ╔════════════════════════════════════════╗'));
+  console.log(chalk.yellow.bold('  ║                                        ║'));
+  console.log(chalk.yellow.bold('  ║      TOURNAMENT STARTING NOW !!        ║'));
+  console.log(chalk.yellow.bold('  ║                                        ║'));
+  console.log(chalk.yellow.bold('  ╠════════════════════════════════════════╣'));
+  console.log(chalk.yellow.bold('  ║                                        ║'));
+  console.log(chalk.yellow.bold(`  ║  ${chalk.white(detail)}${detailPad}║`));
+  console.log(chalk.yellow.bold('  ║                                        ║'));
+  console.log(chalk.yellow.bold('  ╚════════════════════════════════════════╝'));
+  console.log('');
+  await new Promise(resolve => setTimeout(resolve, 1500));
+
   let gameCount = 0;
   const onGameComplete = async (result, currentLeaderboard) => {
     if (gameCount++ > 0) {
