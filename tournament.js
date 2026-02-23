@@ -19,6 +19,7 @@ const {
   printQuickResult,
   printLeaderboard,
   printLiveLeaderboard,
+  printReverseResult,
   printTournamentSummary,
   printWelcome
 } = require('./engine/display');
@@ -85,29 +86,31 @@ async function main() {
   console.clear();
   console.log('');
   console.log('');
+  const totalMatchups = bots.length * (bots.length - 1) / 2;
+  const detail = `${bots.length} bots  |  ${totalMatchups} matchups  |  Round Robin`;
+  const fire = chalk.hex('#FF6600');
+  const orange = chalk.hex('#FFA500');
+  console.log(fire('      🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥'));
   console.log('');
-  const totalGames = bots.length * (bots.length - 1);
-  const detail = `${bots.length} bots  |  ${totalGames} games  |  Round Robin`;
-  const detailPad = ' '.repeat(40 - 2 - detail.length);
-  console.log(chalk.yellow.bold('  ╔════════════════════════════════════════╗'));
-  console.log(chalk.yellow.bold('  ║                                        ║'));
-  console.log(chalk.yellow.bold('  ║      TOURNAMENT STARTING NOW !!        ║'));
-  console.log(chalk.yellow.bold('  ║                                        ║'));
-  console.log(chalk.yellow.bold('  ╠════════════════════════════════════════╣'));
-  console.log(chalk.yellow.bold('  ║                                        ║'));
-  console.log(chalk.yellow.bold(`  ║  ${chalk.white(detail)}${detailPad}║`));
-  console.log(chalk.yellow.bold('  ║                                        ║'));
-  console.log(chalk.yellow.bold('  ╚════════════════════════════════════════╝'));
+  console.log(chalk.red.bold('      ⚔️  TOURNAMENT STARTING NOW  ⚔️'));
   console.log('');
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  console.log(orange(`      ${detail}`));
+  console.log('');
+  console.log(fire('      🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥'));
+  console.log('');
+  await new Promise(resolve => setTimeout(resolve, 3000));
 
   let gameCount = 0;
-  const onGameComplete = async (result, currentLeaderboard) => {
+
+  const onGameStart = async (currentLeaderboard) => {
     if (gameCount++ > 0) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 3000));
     }
     console.clear();
     printLiveLeaderboard(currentLeaderboard);
+  };
+
+  const onGameComplete = async (result) => {
     if (quickMode) {
       printQuickResult(result);
     } else {
@@ -115,12 +118,17 @@ async function main() {
     }
   };
 
+  const onReverseGameComplete = async (result) => {
+    printReverseResult(result);
+  };
+
   if (quickMode) {
     console.log(chalk.gray('  Quick mode: showing results only\n'));
   }
 
-  const { leaderboard, matches, stats } = await runTournament(bots, { onGameComplete });
+  const { leaderboard, matches, stats } = await runTournament(bots, { onGameStart, onGameComplete, onReverseGameComplete });
 
+  console.clear();
   printLeaderboard(leaderboard);
   printTournamentSummary(stats);
 }

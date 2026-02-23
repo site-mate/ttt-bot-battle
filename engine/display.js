@@ -232,6 +232,27 @@ function printQuickResult(result) {
 }
 
 /**
+ * Display the reverse game result in a compact format.
+ */
+function printReverseResult(result) {
+  const nameA = result.botA.name;
+  const nameB = result.botB.name;
+
+  let outcome;
+  if (result.reason === 'win') {
+    const winnerName = result.winner === 'botA' ? nameA : nameB;
+    outcome = `${chalk.green(winnerName)} wins in ${result.moves.length} moves`;
+  } else if (result.reason === 'draw') {
+    outcome = chalk.yellow('Draw');
+  } else {
+    outcome = chalk.red(`Forfeit by ${result.forfeitBy}`);
+  }
+
+  console.log(chalk.gray(`  ↩ Reverse: ${nameA} (X) vs ${nameB} (O) → ${outcome}`));
+  console.log('');
+}
+
+/**
  * Print the welcome banner.
  */
 function printWelcome() {
@@ -304,5 +325,6 @@ module.exports = {
   printQuickResult,
   printMatchBanner,
   printWelcome,
-  printLiveLeaderboard
+  printLiveLeaderboard,
+  printReverseResult
 };

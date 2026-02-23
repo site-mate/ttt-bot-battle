@@ -1,16 +1,53 @@
 /**
  * Tournament Runner
  * Round-robin tournament: every bot plays every other bot twice (once as X, once as O).
+ * Only one game per pair is displayed; the reverse is simulated silently.
  */
 
 const { playGame } = require('./game');
+
+function updateStats(stats, result) {
+  stats[result.botA.name].gamesPlayed++;
+  stats[result.botB.name].gamesPlayed++;
+
+  if (result.winner === 'botA') {
+    stats[result.botA.name].wins++;
+    stats[result.botA.name].points += 3;
+    if (result.reason === 'win') {
+      stats[result.botB.name].losses++;
+    } else {
+      stats[result.botB.name].forfeits++;
+    }
+  } else if (result.winner === 'botB') {
+    stats[result.botB.name].wins++;
+    stats[result.botB.name].points += 3;
+    if (result.reason === 'win') {
+      stats[result.botA.name].losses++;
+    } else {
+      stats[result.botA.name].forfeits++;
+    }
+  } else {
+    stats[result.botA.name].draws++;
+    stats[result.botB.name].draws++;
+    stats[result.botA.name].points += 1;
+    stats[result.botB.name].points += 1;
+  }
+}
+
+function getSortedLeaderboard(stats) {
+  return Object.values(stats).sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return a.name.localeCompare(b.name);
+  });
+}
 
 /**
  * Run a full round-robin tournament.
  * @param {{ name: string, fn: Function, file: string }[]} bots
  * @returns {{ leaderboard: object[], matches: object[], stats: object }}
  */
-async function runTournament(bots, { onGameComplete } = {}) {
+async function runTournament(bots, { onGameStart, onGameComplete, onReverseGameComplete } = {}) {
   const stats = {};
 
   // Initialize stats for each bot
@@ -31,76 +68,49 @@ async function runTournament(bots, { onGameComplete } = {}) {
   let fastestWin = null;
   let mostDramatic = null;
 
-  // Every bot plays every other bot twice
+  // Each pair plays twice (once each side), but only the first game is displayed
   for (let i = 0; i < bots.length; i++) {
-    for (let j = 0; j < bots.length; j++) {
-      if (i === j) continue;
+    for (let j = i + 1; j < bots.length; j++) {
+      const botA = bots[i];
+      const botB = bots[j];
 
-      const botA = bots[i]; // plays as X
-      const botB = bots[j]; // plays as O
-
-      const result = await playGame(botA, botB);
-      matches.push(result);
-
-      stats[botA.name].gamesPlayed++;
-      stats[botB.name].gamesPlayed++;
-
-      if (result.winner === 'botA') {
-        stats[botA.name].wins++;
-        stats[botA.name].points += 3;
-        if (result.reason === 'win') {
-          stats[botB.name].losses++;
-        } else {
-          stats[botB.name].forfeits++;
-        }
-      } else if (result.winner === 'botB') {
-        stats[botB.name].wins++;
-        stats[botB.name].points += 3;
-        if (result.reason === 'win') {
-          stats[botA.name].losses++;
-        } else {
-          stats[botA.name].forfeits++;
-        }
-      } else {
-        // Draw
-        stats[botA.name].draws++;
-        stats[botB.name].draws++;
-        stats[botA.name].points += 1;
-        stats[botB.name].points += 1;
+      // Game 1: displayed (A as X, B as O)
+      if (onGameStart) {
+        await onGameStart(getSortedLeaderboard(stats));
       }
 
-      // Notify caller with current standings
+      const result1 = await playGame(botA, botB);
+      matches.push(result1);
+      updateStats(stats, result1);
+
       if (onGameComplete) {
-        const currentLeaderboard = Object.values(stats).sort((a, b) => {
-          if (b.points !== a.points) return b.points - a.points;
-          if (b.wins !== a.wins) return b.wins - a.wins;
-          return a.name.localeCompare(b.name);
-        });
-        await onGameComplete(result, currentLeaderboard);
+        await onGameComplete(result1);
       }
 
-      // Track fastest win
-      if (result.reason === 'win') {
-        if (!fastestWin || result.moves.length < fastestWin.moves.length) {
-          fastestWin = result;
-        }
+      // Game 2: reverse matchup (B as X, A as O)
+      const result2 = await playGame(botB, botA);
+      matches.push(result2);
+      updateStats(stats, result2);
+
+      if (onReverseGameComplete) {
+        await onReverseGameComplete(result2);
       }
 
-      // Track most dramatic (longest game that ended in a win, not draw)
-      if (result.reason === 'win') {
-        if (!mostDramatic || result.moves.length > mostDramatic.moves.length) {
-          mostDramatic = result;
+      // Track fastest win and most dramatic across both games
+      for (const result of [result1, result2]) {
+        if (result.reason === 'win') {
+          if (!fastestWin || result.moves.length < fastestWin.moves.length) {
+            fastestWin = result;
+          }
+          if (!mostDramatic || result.moves.length > mostDramatic.moves.length) {
+            mostDramatic = result;
+          }
         }
       }
     }
   }
 
-  // Sort leaderboard by points (desc), then wins (desc), then name (asc)
-  const leaderboard = Object.values(stats).sort((a, b) => {
-    if (b.points !== a.points) return b.points - a.points;
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    return a.name.localeCompare(b.name);
-  });
+  const leaderboard = getSortedLeaderboard(stats);
 
   return {
     leaderboard,
